@@ -10,3 +10,5 @@ apps/api/data/*.json
 !apps/api/data/.gitkeep
 test-results/
 playwright-report/
+
+.codebase-memory/
