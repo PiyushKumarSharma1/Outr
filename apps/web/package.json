@@ -20,14 +20,16 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
-    "@rollup/rollup-darwin-x64": "^4.62.5",
+    "@esbuild/darwin-arm64": "^0.28.2",
+    "@rollup/rollup-darwin-arm64": "^4.63.4",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.7.0",
     "jsdom": "^30.0.1",
-    "typescript": "5.4",
+    "tsx": "^4.23.15",
+    "typescript": "~5.4.5",
     "vite": "^6.4.3",
     "vitest": "^4.1.11"
   }

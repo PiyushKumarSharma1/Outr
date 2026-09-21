@@ -19,7 +19,9 @@
     "node": ">=22"
   },
   "devDependencies": {
-    "concurrently": "^10.0.5"
+    "@esbuild/darwin-arm64": "^0.28.2",
+    "concurrently": "^10.0.5",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
