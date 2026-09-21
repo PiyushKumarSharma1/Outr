@@ -171,6 +171,7 @@ export const AgentDefinitionSchema = z.object({
   produces: z.array(z.string().min(1)),
   enabled: z.boolean(),
   mode: z.enum(["LOCAL", "PROVIDER_OPTIONAL"]),
+  poolAgent: z.string().min(1).optional(),
 });
 export type AgentDefinition = z.infer<typeof AgentDefinitionSchema>;
 

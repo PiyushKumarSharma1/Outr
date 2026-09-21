@@ -9,10 +9,13 @@ Outr is an agency-first **signal-to-meeting operating system**. It combines an e
 - **Command center** — qualified-lead, reply, meeting and pipeline metrics; activity funnel; agent pulse; sending-health gates.
 - **Lead explorer** — synchronized MapLibre map/list, fit and intent filters, account evidence drawer, search, sorting, verification state and suppression action.
 - **Campaign studio** — campaign readiness, sequences, explicit approval state, local-time scheduling and stop-on-reply semantics.
-- **Agent pool** — thirteen bounded agent definitions, typed jobs, capability allowlists, job results and append-only events.
+- **Agent pool** — eighteen bounded agent definitions, typed jobs, capability allowlists, job results and append-only events.
+- Pool-backed specialists execute in the OutreachOS common pool through the `run_agent` bridge: Signal Scout (trigger re-scoring + lead revival), Meeting Booker (slot proposals + OOO requeue), ICP Refiner (outcome→targeting loop), Deliverability Ops (inbox health gates), Client Reporter (retainer-grade weekly reports).
 - **Unified inbox** — reply categorization, human review, next-action recommendation and approval before send.
 - **Local API** — Fastify + Zod, tenant-scoped resources, atomic JSON persistence, GeoJSON endpoints, campaign approvals, immutable suppression, compliance gates and event ledger.
 - **Shared contracts** — lead, campaign, approval, suppression, agent, job, event and compliance schemas.
+
+Deep research basis: `docs/AI_OUTREACH_AGENCY_RESEARCH_2026.md` (competitor matrix: Apollo, Instantly, Smartlead, Lemlist, Clay, Reply, AiSDR, Artisan, 11x, Regie, Common Room; agency model $10–30K/mo).
 
 Real outbound transmission is not part of this local baseline. The API reports `sendingEnabled: false`; activation requires verified provider/sender evidence and an approved deployment adapter.
 

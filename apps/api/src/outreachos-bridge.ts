@@ -3,7 +3,7 @@ import { basename, dirname, resolve } from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-export type OutreachOSOperation = "status" | "overview" | "campaigns" | "campaign_stats" | "search_leads" | "run_cycle";
+export type OutreachOSOperation = "status" | "overview" | "campaigns" | "campaign_stats" | "search_leads" | "run_cycle" | "run_agent";
 export type OutreachOSBridgeStatus = {
   configured: boolean;
   root?: string;

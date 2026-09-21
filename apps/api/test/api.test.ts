@@ -115,7 +115,7 @@ describe("Outr API", () => {
   it("runs typed agent jobs and records the lifecycle event ledger", async () => {
     const registry = await app.inject({ method: "GET", url: "/v1/agents" });
     expect(registry.statusCode).toBe(200);
-    expect(registry.json().data).toHaveLength(13);
+    expect(registry.json().data).toHaveLength(18);
 
     const created = await app.inject({
       method: "POST",

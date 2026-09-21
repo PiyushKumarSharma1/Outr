@@ -375,7 +375,7 @@ export const buildApp = async ({ store, logger = false, outreachOS = new PythonO
   app.post("/v1/jobs", async (request, reply) => {
     const workspace = workspaceId(request);
     const input = CreateAgentJobSchema.parse(request.body);
-    const job = await executeAgentJob(store, workspace, input.agentId, input.input, input.correlationId);
+    const job = await executeAgentJob(store, workspace, input.agentId, input.input, input.correlationId, outreachOS);
     return reply.status(201).send(job);
   });
 

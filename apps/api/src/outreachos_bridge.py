@@ -114,6 +114,15 @@ def _operation(payload: dict[str, Any]) -> dict[str, Any]:
         if os.environ.get("OUTREACHOS_BRIDGE_WRITE_ENABLED", "false").lower() != "true":
             return _fail("BRIDGE_WRITE_DISABLED", "Cycle execution is disabled for this bridge runtime")
         return {"ok": True, "data": engine.full_cycle(campaign, limit=min(max(int(payload.get("limit", 25)), 1), 100))}
+    if operation == "run_agent":
+        agent_name = str(payload.get("agent", "")).strip()
+        if not agent_name:
+            return _fail("BAD_REQUEST", "run_agent requires an 'agent' name")
+        try:
+            result = engine.run_agent(agent_name, campaign or None)
+        except ValueError as error:
+            return _fail("UNKNOWN_AGENT", str(error))
+        return {"ok": True, "data": result}
     return _fail("UNKNOWN_OPERATION", f"Unknown bridge operation: {operation}")
 
 

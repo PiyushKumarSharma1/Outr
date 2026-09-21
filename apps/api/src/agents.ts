@@ -5,6 +5,7 @@ import type {
   ComplianceReadiness,
   DomainEvent,
 } from "@outr/contracts";
+import type { OutreachOSRuntimeBridge } from "./outreachos-bridge.js";
 import type { Database, DataStore } from "./store.js";
 
 export const agentRegistry: AgentDefinition[] = [
@@ -138,6 +139,61 @@ export const agentRegistry: AgentDefinition[] = [
     enabled: true,
     mode: "LOCAL",
   },
+  {
+    id: "signal-scout",
+    name: "Signal Scout",
+    description: "Continuously re-scores pool leads for trigger signals and revives dormant leads on new buying behaviour.",
+    capabilities: ["signal-scoring", "intent-refresh", "lead-revival"],
+    accepts: ["campaign", "pool-snapshot"],
+    produces: ["signal-events", "re-prioritized-lead"],
+    enabled: true,
+    mode: "LOCAL",
+    poolAgent: "signal_scout",
+  },
+  {
+    id: "meeting-booker",
+    name: "Meeting Booker",
+    description: "Proposes concrete meeting slots in prospect local time and re-queues out-of-office replies.",
+    capabilities: ["slot-proposal", "booking-draft", "ooo-requeue"],
+    accepts: ["positive-reply"],
+    produces: ["meeting-proposal", "crm-sync-event"],
+    enabled: true,
+    mode: "LOCAL",
+    poolAgent: "meeting_booker",
+  },
+  {
+    id: "icp-refiner",
+    name: "ICP Refiner",
+    description: "Harvests outcome data and records which segments actually reply, tightening future hunts.",
+    capabilities: ["outcome-analysis", "icp-recommendation", "learning-loop"],
+    accepts: ["campaign-outcomes"],
+    produces: ["icp-refinement"],
+    enabled: true,
+    mode: "LOCAL",
+    poolAgent: "icp_refiner",
+  },
+  {
+    id: "deliverability-ops",
+    name: "Deliverability Ops",
+    description: "Audits per-inbox 24h health, pauses senders above bounce thresholds and quarantines failing inboxes.",
+    capabilities: ["inbox-health", "bounce-monitoring", "sender-rotation"],
+    accepts: ["send-infrastructure"],
+    produces: ["inbox-audit", "pause-decision"],
+    enabled: true,
+    mode: "LOCAL",
+    poolAgent: "deliverability_ops",
+  },
+  {
+    id: "client-reporter",
+    name: "Client Reporter",
+    description: "Assembles the weekly client-facing report: replies, meetings, deliverability and learnings that justify the retainer.",
+    capabilities: ["client-reporting", "performance-summary", "retainer-evidence"],
+    accepts: ["campaign", "pool-snapshot"],
+    produces: ["client-report"],
+    enabled: true,
+    mode: "LOCAL",
+    poolAgent: "client_reporter",
+  },
 ];
 
 export const complianceReadiness = (database: Database, workspaceId = "demo"): ComplianceReadiness => {
@@ -236,21 +292,21 @@ const buildOutput = (
   }
 };
 
-const event = (
-  workspaceId: string,
-  job: AgentJob,
-  type: string,
-  payload: Record<string, unknown>,
-): DomainEvent => ({
-  id: `event_${randomUUID()}`,
-  workspaceId,
-  type,
-  aggregateType: "agent_job",
-  aggregateId: job.id,
-  correlationId: job.correlationId,
-  payload,
-  createdAt: new Date().toISOString(),
-});
+const poolBackedOutput = async (
+  bridge: OutreachOSRuntimeBridge | undefined,
+  poolAgent: string,
+  input: Record<string, unknown>,
+): Promise<Record<string, unknown> | undefined> => {
+  if (!bridge) return undefined;
+  const status = bridge.status();
+  if (!status.configured) return undefined;
+  try {
+    const campaign = typeof input.campaign === "string" && input.campaign ? input.campaign : undefined;
+    return await bridge.call("run_agent", { agent: poolAgent, campaign });
+  } catch {
+    return undefined; // fall back to the local deterministic output
+  }
+};
 
 export const executeAgentJob = async (
   store: DataStore,
@@ -258,9 +314,14 @@ export const executeAgentJob = async (
   agentId: string,
   input: Record<string, unknown>,
   correlationId = `correlation_${randomUUID()}`,
+  bridge?: OutreachOSRuntimeBridge,
 ): Promise<AgentJob> => {
   const definition = agentRegistry.find((item) => item.id === agentId && item.enabled);
   if (!definition) throw new Error("AGENT_NOT_FOUND");
+
+  const poolResult = definition.poolAgent
+    ? await poolBackedOutput(bridge, definition.poolAgent, input)
+    : undefined;
 
   return store.update((database) => {
     const createdAt = new Date().toISOString();
@@ -280,15 +341,34 @@ export const executeAgentJob = async (
     job.startedAt = new Date().toISOString();
     database.events.push(event(workspaceId, job, "agent.job.running", { agentId }));
 
-    job.output = buildOutput(agentId, input, database, workspaceId);
+    job.output = poolResult ?? buildOutput(agentId, input, database, workspaceId);
     job.status = "SUCCEEDED";
     job.completedAt = new Date().toISOString();
     database.events.push(
       event(workspaceId, job, "agent.job.succeeded", {
         agentId,
         outputKeys: Object.keys(job.output),
+        poolBacked: Boolean(poolResult),
       }),
     );
     return structuredClone(job);
   });
 };
+
+const event = (
+  workspaceId: string,
+  job: AgentJob,
+  type: string,
+  payload: Record<string, unknown>,
+): DomainEvent => ({
+  id: `event_${randomUUID()}`,
+  workspaceId,
+  type,
+  aggregateType: "agent_job",
+  aggregateId: job.id,
+  correlationId: job.correlationId,
+  payload,
+  createdAt: new Date().toISOString(),
+});
+
+
