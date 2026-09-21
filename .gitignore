@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+apps/api/data/*.json
+!apps/api/data/.gitkeep
+test-results/
+playwright-report/
